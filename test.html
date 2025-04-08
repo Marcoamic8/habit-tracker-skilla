@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Tracker Finale - Livelli con nextGoal statico</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 10px;
+    }
+    #mainContainer {
+      border: 1px solid #ccc;
+      padding: 8px;
+      border-radius: 6px;
+      position: relative;
+    }
+    .smallText {
+      font-size: 12px;
+      text-align: center;
+      margin: 4px 0;
+    }
+    .tinyText {
+      font-size: 10px;
+    }
+    /* Messaggio streak persa */
+    #lostStreakMsg {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+      font-size: 12px;
+      margin-bottom: 6px;
+      display: none;
+    }
+    /* Timeline settimanale */
+    #timelineContainer {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+    .weekBox {
+      width: 60px;
+      height: 50px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin: 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      position: relative;
+    }
+    .weekBox.current {
+      border: 2px solid #4caf50; /* Evidenzia la settimana attuale */
+    }
+    .statusSymbol {
+      font-size: 16px;
+      line-height: 16px;
+      margin-bottom: 2px;
+    }
+    /* Barra di progresso (obiettivo 20 contributi) */
+    #progressBarContainer {
+      background-color: #eee;
+      border-radius: 8px;
+      height: 12px;
+      margin: 0 auto 2px auto;
+      width: 100%;
+      overflow: hidden;
+    }
+    #progressBarFill {
+      height: 100%;
+      background-color: #4caf50;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+    /* Sezione Countdown e Pulsante “Contribuisci ora” */
+    #countdownLine {
+      font-size: 12px;
+      text-align: center;
+      margin: 6px 0 4px 0;
+    }
+    #contributeBtn {
+      display: block;
+      margin: 0 auto 6px auto;
+      font-size: 12px;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+    #contributeBtn:disabled {
+      background-color: #ddd;
+      cursor: not-allowed;
+    }
+    /* Livello e motivazione */
+    #levelSection {
+      margin-top: 4px;
+      text-align: center;
+      font-size: 12px;
+    }
+    #levelEmojiLine {
+      margin-bottom: 2px;
+    }
+    #levelMotivation {
+      font-size: 10px;
+      color: #444;
+      margin-bottom: 2px;
+    }
+    #levelNextGoal {
+      font-size: 10px;
+      color: #666;
+    }
+    /* Reset progressi in basso a destra */
+    #resetArea {
+      position: absolute;
+      bottom: 4px;
+      right: 6px;
+      text-align: right;
+    }
+    #resetBtn {
+      color: #777;
+      font-size: 10px;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    #resetBtn:hover {
+      color: #000;
+    }
+    #resetConfirm {
+      display: none;
+      font-size: 10px;
+      color: #c00;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div id="mainContainer">
+    <!-- Messaggio "Streak persa" e "Streak attuale | Record" -->
+    <div id="lostStreakMsg">Streak persa. Riparti da 0!</div>
+    <div class="smallText" id="streakInfoLine">Streak attuale: 0 | Record: 0</div>
+
+    <!-- Timeline (5 passate, 1 attuale, 2 future) -->
+    <div id="timelineContainer"></div>
+
+    <!-- Riga "Obiettivo" e progress bar -->
+    <div class="smallText">
+      🎯 Obiettivo: dare almeno 20 contributi (<span id="progressCount">0</span> su 20)
+    </div>
+    <div id="progressBarContainer">
+      <div id="progressBarFill"></div>
+    </div>
+
+    <!-- Countdown e pulsante "Contribuisci ora" -->
+    <div id="countdownLine">⏳Hai ancora -- per dare il tuo contributo della settimana</div>
+    <button id="contributeBtn">Contribuisci ora</button>
+
+    <!-- Sezione livello -->
+    <div id="levelSection">
+      <div id="levelEmojiLine">Livello: ➖ ➖ ➖ ➖  "Non pervenuto"</div>
+      <div id="levelMotivation"></div>
+      <div id="levelNextGoal"></div>
+    </div>
+
+    <!-- Area reset in basso a destra -->
+    <div id="resetArea">
+      <button id="resetBtn">Reset progressi</button>
+      <div id="resetConfirm">
+        ⚠️ Sei sicuro? Se prosegui perderai tutti i progressi.<br>
+        Clicca di nuovo per confermare.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*******************************************************
+     * CONFIG & COSTANTI
+     *******************************************************/
+    const GOAL_WEEKS = 20; // 20 contributi totali
+    // Definizione dei 4 livelli
+    const LEVELS = [
+      {
+        threshold: 2,
+        emoji: "🌱",
+        name: "In cammino",
+        motivation: "Hai iniziato un percorso di crescita.",
+        nextGoal: "Per salire di livello, raggiungi una streak di 4 settimane consecutive."
+      },
+      {
+        threshold: 4,
+        emoji: "🐢",
+        name: "Costante",
+        motivation: "Hai dimostrato regolarità.",
+        nextGoal: "Per salire di livello, raggiungi una streak di 8 settimane consecutive."
+      },
+      {
+        threshold: 8,
+        emoji: "🐉",
+        name: "Tenace",
+        motivation: "Non molli mai.",
+        nextGoal: "Vuoi ancora salire di livello? Raggiungi una streak di ??? settimane consecutive… (numero top secret🤐)"
+      },
+      {
+        threshold: 16,
+        emoji: "👑",
+        name: "Custode del fuoco",
+        motivation: "Hai raggiunto il livello massimo!",
+        nextGoal: "Hai raggiunto il livello massimo, continua così oppure resetta i tuoi progressi per una nuova sfida."
+      }
+    ];
+
+    /*******************************************************
+     * DATI SALVATI
+     *******************************************************/
+    function loadData() {
+      const saved = localStorage.getItem("habitTrackerDataMega");
+      if (saved) return JSON.parse(saved);
+      return {
+        lastWeekClicked: "",
+        streakCurrent: 0,
+        recordMax: 0,
+        totalCompleted: 0,
+        calendarHistory: {}
+      };
+    }
+    function saveData(d) {
+      localStorage.setItem("habitTrackerDataMega", JSON.stringify(d));
+    }
+    let data = loadData();
+
+    /*******************************************************
+     * FUNZIONI DATA & SETTIMANE
+     *******************************************************/
+    function getIsoWeekInfo(date) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      return { year: d.getUTCFullYear(), week: weekNo };
+    }
+    function getWeekId(date) {
+      const info = getIsoWeekInfo(date);
+      const w = info.week < 10 ? "0" + info.week : info.week;
+      return info.year + "-W" + w;
+    }
+    function weekIdToNumeric(weekId) {
+      const parts = weekId.split("-W");
+      if (parts.length < 2) return 0;
+      const yearNum = parseInt(parts[0], 10);
+      const weekNum = parseInt(parts[1], 10);
+      return yearNum * 52 + weekNum;
+    }
+    function weekDifference(id1, id2) {
+      return weekIdToNumeric(id2) - weekIdToNumeric(id1);
+    }
+
+    // Ritorna data del lunedì di "date"
+    function getMonday(date) {
+      const day = date.getDay();
+      const diff = (day === 0 ? 6 : day - 1);
+      const monday = new Date(date);
+      monday.setDate(monday.getDate() - diff);
+      monday.setHours(0,0,0,0);
+      return monday;
+    }
+
+    // Formatta la settimana:
+    // se inizio= stesso mese => "7–13 apr"
+    // se inizio=fine mese diversi => "30 apr – 6 mag"
+    function formatWeekRange(mondayDate) {
+      const sundayDate = new Date(mondayDate);
+      sundayDate.setDate(sundayDate.getDate() + 6);
+      const shortMonth = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+      const d1 = mondayDate.getDate();
+      const m1 = shortMonth[mondayDate.getMonth()];
+      const d2 = sundayDate.getDate();
+      const m2 = shortMonth[sundayDate.getMonth()];
+
+      if (m1 === m2) {
+        return `${d1}–${d2} ${m1}`;
+      } else {
+        return `${d1} ${m1} – ${d2} ${m2}`;
+      }
+    }
+
+    // 8 box => 5 passate, 1 attuale, 2 future
+    function buildTimeline() {
+      const today = new Date();
+      const currentMonday = getMonday(today);
+
+      let arr = [];
+      for (let i = -5; i <= 2; i++) {
+        let thisMonday = new Date(currentMonday);
+        thisMonday.setDate(currentMonday.getDate() + i*7);
+        arr.push({
+          offset: i,
+          startDate: thisMonday,
+          label: formatWeekRange(thisMonday),
+          isoWeekId: getWeekId(thisMonday)
+        });
+      }
+      return arr;
+    }
+
+    /*******************************************************
+     * COUNTDOWN
+     *******************************************************/
+    function getNextMonday() {
+      const now = new Date();
+      let day = now.getDay();
+      let daysToMonday = 1 - day;
+      if (daysToMonday <= 0) daysToMonday += 7;
+      const nextMon = new Date(now);
+      nextMon.setDate(now.getDate() + daysToMonday);
+      nextMon.setHours(0,0,0,0);
+      return nextMon;
+    }
+    function updateCountdownLine() {
+      const cLine = document.getElementById("countdownLine");
+      const now = new Date();
+      const nMon = getNextMonday();
+      const diffMs = nMon - now;
+      if (diffMs <= 0) {
+        cLine.textContent = "⏳Hai ancora 0g 0h 0m per dare il tuo contributo della settimana";
+        return;
+      }
+      const diffMin = Math.floor(diffMs / 60000);
+      const days = Math.floor(diffMin / (60*24));
+      const hours = Math.floor((diffMin % (60*24))/60);
+      const mins = diffMin % 60;
+      cLine.textContent = `⏳Hai ancora ${days}g ${hours}h ${mins}m per dare il tuo contributo della settimana`;
+    }
+
+    /*******************************************************
+     * LIVELLI
+     *******************************************************/
+    // Calcola quanti livelli sbloccati
+    function getUnlockedCount(recordMax) {
+      let count = 0;
+      for (let lvl of LEVELS) {
+        if (recordMax >= lvl.threshold) count++;
+      }
+      return count;
+    }
+    // Livello "corrente" in base al recordMax
+    function getCurrentLevel(recordMax) {
+      let current = null;
+      for (let lvl of LEVELS) {
+        if (recordMax >= lvl.threshold) current = lvl;
+      }
+      return current; // null => recordMax<2 => livello 0
+    }
+
+    function updateLevelSection(recordMax) {
+      const levelEmojiLine = document.getElementById("levelEmojiLine");
+      const levelMotivation = document.getElementById("levelMotivation");
+      const levelNextGoal = document.getElementById("levelNextGoal");
+
+      const unlocked = getUnlockedCount(recordMax);
+      // Costruisce "🌱 🐢 ➖ ➖" etc
+      let emojiSeq = "";
+      for (let i = 0; i < LEVELS.length; i++) {
+        if (i < unlocked) {
+          emojiSeq += LEVELS[i].emoji + " ";
+        } else {
+          emojiSeq += "➖ ";
+        }
+      }
+
+      // Livello 0 => Non pervenuto
+      if (unlocked === 0) {
+        levelEmojiLine.textContent = `Livello: ${emojiSeq}"Non pervenuto"`;
+        levelMotivation.textContent = "";
+        levelNextGoal.textContent = "Per sbloccare il primo livello, raggiungi una streak di 2 settimane consecutive.";
+        return;
+      }
+
+      // Livello sbloccato
+      const currentLvl = getCurrentLevel(recordMax);
+      if (!currentLvl) {
+        // fallback improbabile
+        levelEmojiLine.textContent = `Livello: ${emojiSeq}"Non pervenuto"`;
+        levelMotivation.textContent = "";
+        levelNextGoal.textContent = "Per sbloccare il primo livello, raggiungi una streak di 2 settimane consecutive.";
+        return;
+      }
+
+      // Esempio: Livello: 🌱 🐢 ➖ ➖ "Costante" – Hai dimostrato regolarità.
+      levelEmojiLine.textContent = `Livello: ${emojiSeq}"${currentLvl.name}" – ${currentLvl.motivation}`;
+      levelMotivation.textContent = "";
+      levelNextGoal.textContent = currentLvl.nextGoal; // usa il testo statico definito in LEVELS
+    }
+
+    /*******************************************************
+     * UPDATE UI
+     *******************************************************/
+    function updateUI(d) {
+      // Se saltate 2+ settimane => streak=0
+      const nowWeekId = getWeekId(new Date());
+      if (d.lastWeekClicked) {
+        const diff = weekDifference(d.lastWeekClicked, nowWeekId);
+        if (diff >= 2) {
+          d.streakCurrent = 0;
+        }
+      }
+
+      // Messaggio streak persa
+      const lostMsg = document.getElementById("lostStreakMsg");
+      lostMsg.style.display = (d.streakCurrent > 0) ? "none" : "block";
+
+      // Streak info line
+      const streakLine = document.getElementById("streakInfoLine");
+      streakLine.textContent = `Streak attuale: ${d.streakCurrent} | Record: ${d.recordMax}`;
+
+      // Timeline
+      const timelineContainer = document.getElementById("timelineContainer");
+      timelineContainer.innerHTML = "";
+      const nowNumeric = weekIdToNumeric(nowWeekId);
+      const timeline = buildTimeline();
+
+      for (let t of timeline) {
+        const box = document.createElement("div");
+        box.className = "weekBox";
+        if (t.offset === 0) box.classList.add("current");
+
+        let statusEl = document.createElement("div");
+        statusEl.className = "statusSymbol";
+
+        let numericWid = weekIdToNumeric(t.isoWeekId);
+        if (numericWid > nowNumeric) {
+          // future
+          statusEl.textContent = "⬜";
+        } else {
+          // passata o attuale
+          const state = d.calendarHistory[t.isoWeekId];
+          if (state === "done") {
+            statusEl.textContent = "🔥";
+          } else if (state === "missed") {
+            statusEl.textContent = "💨";
+          } else {
+            // se è la current e non cliccato => ⬜, altrimenti 💨
+            if (numericWid === nowNumeric) {
+              if (d.lastWeekClicked === nowWeekId) {
+                statusEl.textContent = "🔥";
+              } else {
+                statusEl.textContent = "⬜";
+              }
+            } else {
+              statusEl.textContent = "💨";
+            }
+          }
+        }
+        box.appendChild(statusEl);
+
+        let label = document.createElement("div");
+        label.textContent = t.label; 
+        box.appendChild(label);
+
+        timelineContainer.appendChild(box);
+      }
+
+      // Progresso (20 contributi)
+      document.getElementById("progressCount").textContent = d.totalCompleted;
+      const pbFill = document.getElementById("progressBarFill");
+      let perc = (d.totalCompleted / GOAL_WEEKS)*100;
+      if (perc>100) perc=100;
+      pbFill.style.width = perc+"%";
+
+      // Pulsante Contribuisci
+      const cBtn = document.getElementById("contributeBtn");
+      if (d.lastWeekClicked === nowWeekId) {
+        cBtn.disabled = true;
+        cBtn.textContent = "Già segnata ✔";
+      } else {
+        cBtn.disabled = false;
+        cBtn.textContent = "Contribuisci ora";
+      }
+
+      // Sezione livelli
+      updateLevelSection(d.recordMax);
+    }
+
+    /*******************************************************
+     * INIT
+     *******************************************************/
+    document.addEventListener("DOMContentLoaded", function(){
+      // Carica dati e aggiorna UI
+      updateUI(data);
+
+      // Countdown
+      updateCountdownLine();
+      setInterval(updateCountdownLine, 60000);
+
+      // Contribuisci
+      const cBtn = document.getElementById("contributeBtn");
+      cBtn.addEventListener("click", function(){
+        const nowWeekId = getWeekId(new Date());
+        if (data.lastWeekClicked === nowWeekId) return;
+
+        // Gestione streak
+        if (!data.lastWeekClicked) {
+          data.streakCurrent = 1;
+        } else {
+          const diff = weekDifference(data.lastWeekClicked, nowWeekId);
+          if (diff === 1) {
+            data.streakCurrent +=1;
+          } else {
+            data.streakCurrent=1;
+          }
+        }
+        // Aggiorna record
+        if (data.streakCurrent > data.recordMax) {
+          data.recordMax = data.streakCurrent;
+        }
+        // Aumenta contatore totale
+        data.totalCompleted +=1;
+        // Segna la settimana
+        data.lastWeekClicked = nowWeekId;
+        data.calendarHistory[nowWeekId] = "done";
+        // Salva e aggiorna
+        saveData(data);
+        updateUI(data);
+
+        // Apri link in nuova scheda
+        window.open("https://www.google.com","_blank");
+      });
+
+      // Reset
+      const resetBtn = document.getElementById("resetBtn");
+      const resetConfirm = document.getElementById("resetConfirm");
+      let resetStage = 0;
+      resetBtn.addEventListener("click", function(){
+        if (resetStage===0) {
+          resetStage=1;
+          resetConfirm.style.display="block";
+        } else {
+          resetStage=0;
+          resetConfirm.style.display="none";
+          data = {
+            lastWeekClicked: "",
+            streakCurrent: 0,
+            recordMax: 0,
+            totalCompleted: 0,
+            calendarHistory:{}
+          };
+          saveData(data);
+          updateUI(data);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
