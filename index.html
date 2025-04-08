@@ -2,10 +2,10 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Tracker Finale - Livelli con nextGoal statico</title>
+  <title>Tracker Finale - Spaziatura & Testo Reset</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       max-width: 700px;
       margin: 0 auto;
       padding: 0 10px;
@@ -16,6 +16,7 @@
       border-radius: 6px;
       position: relative;
     }
+
     .smallText {
       font-size: 12px;
       text-align: center;
@@ -24,6 +25,7 @@
     .tinyText {
       font-size: 10px;
     }
+
     /* Messaggio streak persa */
     #lostStreakMsg {
       color: red;
@@ -33,12 +35,41 @@
       margin-bottom: 6px;
       display: none;
     }
+
+    /* Sezione in alto: Timer + Contribuisci */
+    #topSection {
+      text-align: center;
+      margin-bottom: 16px; /* Maggiore distanza prima del resto */
+    }
+    #countdownLine {
+      font-size: 12px;
+      margin: 4px 0;
+    }
+    #contributeBtn {
+      font-size: 12px;
+      padding: 4px 8px;
+      cursor: pointer;
+      margin: 0 auto;
+      display: inline-block;
+    }
+    #contributeBtn:disabled {
+      background-color: #ddd;
+      cursor: not-allowed;
+    }
+
+    /* Info Streak */
+    #streakInfoLine {
+      font-size: 12px;
+      text-align: center;
+      margin: 12px 0; /* Maggiore distanza dal pulsante e dalla timeline */
+    }
+
     /* Timeline settimanale */
     #timelineContainer {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      margin-bottom: 4px;
+      margin-bottom: 8px; /* Più spazio dal livello */
     }
     .weekBox {
       width: 60px;
@@ -61,14 +92,17 @@
       line-height: 16px;
       margin-bottom: 2px;
     }
-    /* Barra di progresso (obiettivo 20 contributi) */
+
+    /* Barra di progresso con testo interno */
     #progressBarContainer {
+      position: relative;
       background-color: #eee;
       border-radius: 8px;
-      height: 12px;
-      margin: 0 auto 2px auto;
+      height: 24px; /* Alzato per ospitare il testo */
+      margin: 6px auto 8px auto;
       width: 100%;
       overflow: hidden;
+      text-align: center;
     }
     #progressBarFill {
       height: 100%;
@@ -76,26 +110,22 @@
       width: 0%;
       transition: width 0.5s ease;
     }
-    /* Sezione Countdown e Pulsante “Contribuisci ora” */
-    #countdownLine {
+    /* Testo dentro la barra */
+    #progressBarText {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      line-height: 24px;
       font-size: 12px;
-      text-align: center;
-      margin: 6px 0 4px 0;
+      color: #000;
+      pointer-events: none;
     }
-    #contributeBtn {
-      display: block;
-      margin: 0 auto 6px auto;
-      font-size: 12px;
-      padding: 4px 8px;
-      cursor: pointer;
-    }
-    #contributeBtn:disabled {
-      background-color: #ddd;
-      cursor: not-allowed;
-    }
+
     /* Livello e motivazione */
     #levelSection {
-      margin-top: 4px;
+      margin-top: 12px; /* più spazio dalla timeline */
       text-align: center;
       font-size: 12px;
     }
@@ -111,6 +141,7 @@
       font-size: 10px;
       color: #666;
     }
+
     /* Reset progressi in basso a destra */
     #resetArea {
       position: absolute;
@@ -140,37 +171,42 @@
 </head>
 <body>
   <div id="mainContainer">
-    <!-- Messaggio "Streak persa" e "Streak attuale | Record" -->
-    <div id="lostStreakMsg">Streak persa. Riparti da 0!</div>
-    <div class="smallText" id="streakInfoLine">Streak attuale: 0 | Record: 0</div>
 
-    <!-- Timeline (5 passate, 1 attuale, 2 future) -->
+    <!-- Messaggio "Streak persa" -->
+    <div id="lostStreakMsg">Streak persa. Riparti da 0!</div>
+
+    <!-- Sezione in alto: Timer + Contribuisci -->
+    <div id="topSection">
+      <div id="countdownLine">⏳Hai ancora -- per dare il tuo contributo della settimana</div>
+      <button id="contributeBtn">Contribuisci ora</button>
+    </div>
+
+    <!-- Info Streak e Record -->
+    <div id="streakInfoLine">Streak attuale: 0 | Record: 0</div>
+
+    <!-- Timeline -->
     <div id="timelineContainer"></div>
 
-    <!-- Riga "Obiettivo" e progress bar -->
-    <div class="smallText">
-      🎯 Obiettivo: dare almeno 20 contributi (<span id="progressCount">0</span> su 20)
-    </div>
+    <!-- Barra di progresso con testo interno -->
     <div id="progressBarContainer">
       <div id="progressBarFill"></div>
+      <div id="progressBarText">
+        🎯 Obiettivo: dare almeno 20 contributi (<span id="progressCount">0</span> su 20)
+      </div>
     </div>
 
-    <!-- Countdown e pulsante "Contribuisci ora" -->
-    <div id="countdownLine">⏳Hai ancora -- per dare il tuo contributo della settimana</div>
-    <button id="contributeBtn">Contribuisci ora</button>
-
-    <!-- Sezione livello -->
+    <!-- Sezione Livello -->
     <div id="levelSection">
       <div id="levelEmojiLine">Livello: ➖ ➖ ➖ ➖  "Non pervenuto"</div>
       <div id="levelMotivation"></div>
       <div id="levelNextGoal"></div>
     </div>
 
-    <!-- Area reset in basso a destra -->
+    <!-- Area Reset in basso a destra -->
     <div id="resetArea">
       <button id="resetBtn">Reset progressi</button>
       <div id="resetConfirm">
-        ⚠️ Sei sicuro? Se prosegui perderai tutti i progressi.<br>
+        ⚠️ Attenzione! Se prosegui perderai tutti i progressi.<br>
         Clicca di nuovo per confermare.
       </div>
     </div>
@@ -180,8 +216,7 @@
     /*******************************************************
      * CONFIG & COSTANTI
      *******************************************************/
-    const GOAL_WEEKS = 20; // 20 contributi totali
-    // Definizione dei 4 livelli
+    const GOAL_WEEKS = 20; // 20 contributi
     const LEVELS = [
       {
         threshold: 2,
@@ -214,7 +249,7 @@
     ];
 
     /*******************************************************
-     * DATI SALVATI
+     * SALVATAGGIO DATI
      *******************************************************/
     function loadData() {
       const saved = localStorage.getItem("habitTrackerDataMega");
@@ -233,7 +268,7 @@
     let data = loadData();
 
     /*******************************************************
-     * FUNZIONI DATA & SETTIMANE
+     * UTILS PER DATE & TIMELINE
      *******************************************************/
     function getIsoWeekInfo(date) {
       const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -258,7 +293,6 @@
       return weekIdToNumeric(id2) - weekIdToNumeric(id1);
     }
 
-    // Ritorna data del lunedì di "date"
     function getMonday(date) {
       const day = date.getDay();
       const diff = (day === 0 ? 6 : day - 1);
@@ -267,10 +301,6 @@
       monday.setHours(0,0,0,0);
       return monday;
     }
-
-    // Formatta la settimana:
-    // se inizio= stesso mese => "7–13 apr"
-    // se inizio=fine mese diversi => "30 apr – 6 mag"
     function formatWeekRange(mondayDate) {
       const sundayDate = new Date(mondayDate);
       sundayDate.setDate(sundayDate.getDate() + 6);
@@ -279,19 +309,15 @@
       const m1 = shortMonth[mondayDate.getMonth()];
       const d2 = sundayDate.getDate();
       const m2 = shortMonth[sundayDate.getMonth()];
-
       if (m1 === m2) {
         return `${d1}–${d2} ${m1}`;
       } else {
         return `${d1} ${m1} – ${d2} ${m2}`;
       }
     }
-
-    // 8 box => 5 passate, 1 attuale, 2 future
     function buildTimeline() {
       const today = new Date();
       const currentMonday = getMonday(today);
-
       let arr = [];
       for (let i = -5; i <= 2; i++) {
         let thisMonday = new Date(currentMonday);
@@ -338,7 +364,6 @@
     /*******************************************************
      * LIVELLI
      *******************************************************/
-    // Calcola quanti livelli sbloccati
     function getUnlockedCount(recordMax) {
       let count = 0;
       for (let lvl of LEVELS) {
@@ -346,22 +371,21 @@
       }
       return count;
     }
-    // Livello "corrente" in base al recordMax
     function getCurrentLevel(recordMax) {
       let current = null;
       for (let lvl of LEVELS) {
-        if (recordMax >= lvl.threshold) current = lvl;
+        if (recordMax >= lvl.threshold) {
+          current = lvl;
+        }
       }
-      return current; // null => recordMax<2 => livello 0
+      return current;
     }
-
     function updateLevelSection(recordMax) {
       const levelEmojiLine = document.getElementById("levelEmojiLine");
       const levelMotivation = document.getElementById("levelMotivation");
       const levelNextGoal = document.getElementById("levelNextGoal");
 
       const unlocked = getUnlockedCount(recordMax);
-      // Costruisce "🌱 🐢 ➖ ➖" etc
       let emojiSeq = "";
       for (let i = 0; i < LEVELS.length; i++) {
         if (i < unlocked) {
@@ -382,17 +406,15 @@
       // Livello sbloccato
       const currentLvl = getCurrentLevel(recordMax);
       if (!currentLvl) {
-        // fallback improbabile
         levelEmojiLine.textContent = `Livello: ${emojiSeq}"Non pervenuto"`;
         levelMotivation.textContent = "";
         levelNextGoal.textContent = "Per sbloccare il primo livello, raggiungi una streak di 2 settimane consecutive.";
         return;
       }
 
-      // Esempio: Livello: 🌱 🐢 ➖ ➖ "Costante" – Hai dimostrato regolarità.
       levelEmojiLine.textContent = `Livello: ${emojiSeq}"${currentLvl.name}" – ${currentLvl.motivation}`;
       levelMotivation.textContent = "";
-      levelNextGoal.textContent = currentLvl.nextGoal; // usa il testo statico definito in LEVELS
+      levelNextGoal.textContent = currentLvl.nextGoal;
     }
 
     /*******************************************************
@@ -412,7 +434,21 @@
       const lostMsg = document.getElementById("lostStreakMsg");
       lostMsg.style.display = (d.streakCurrent > 0) ? "none" : "block";
 
-      // Streak info line
+      // Countdown & Bottone
+      const cLine = document.getElementById("countdownLine");
+      const cBtn = document.getElementById("contributeBtn");
+      if (d.lastWeekClicked === nowWeekId) {
+        cBtn.disabled = true;
+        cBtn.textContent = "Già segnata ✔";
+        // Nascondi countdown
+        cLine.style.display = "none";
+      } else {
+        cBtn.disabled = false;
+        cBtn.textContent = "Contribuisci ora";
+        cLine.style.display = "block";
+      }
+
+      // Streak info
       const streakLine = document.getElementById("streakInfoLine");
       streakLine.textContent = `Streak attuale: ${d.streakCurrent} | Record: ${d.recordMax}`;
 
@@ -421,7 +457,6 @@
       timelineContainer.innerHTML = "";
       const nowNumeric = weekIdToNumeric(nowWeekId);
       const timeline = buildTimeline();
-
       for (let t of timeline) {
         const box = document.createElement("div");
         box.className = "weekBox";
@@ -432,17 +467,14 @@
 
         let numericWid = weekIdToNumeric(t.isoWeekId);
         if (numericWid > nowNumeric) {
-          // future
           statusEl.textContent = "⬜";
         } else {
-          // passata o attuale
           const state = d.calendarHistory[t.isoWeekId];
           if (state === "done") {
             statusEl.textContent = "🔥";
           } else if (state === "missed") {
             statusEl.textContent = "💨";
           } else {
-            // se è la current e non cliccato => ⬜, altrimenti 💨
             if (numericWid === nowNumeric) {
               if (d.lastWeekClicked === nowWeekId) {
                 statusEl.textContent = "🔥";
@@ -457,28 +489,19 @@
         box.appendChild(statusEl);
 
         let label = document.createElement("div");
-        label.textContent = t.label; 
+        label.textContent = t.label;
         box.appendChild(label);
 
         timelineContainer.appendChild(box);
       }
 
-      // Progresso (20 contributi)
-      document.getElementById("progressCount").textContent = d.totalCompleted;
+      // Progresso
+      const progressCount = document.getElementById("progressCount");
+      progressCount.textContent = d.totalCompleted;
       const pbFill = document.getElementById("progressBarFill");
       let perc = (d.totalCompleted / GOAL_WEEKS)*100;
       if (perc>100) perc=100;
-      pbFill.style.width = perc+"%";
-
-      // Pulsante Contribuisci
-      const cBtn = document.getElementById("contributeBtn");
-      if (d.lastWeekClicked === nowWeekId) {
-        cBtn.disabled = true;
-        cBtn.textContent = "Già segnata ✔";
-      } else {
-        cBtn.disabled = false;
-        cBtn.textContent = "Contribuisci ora";
-      }
+      pbFill.style.width = perc + "%";
 
       // Sezione livelli
       updateLevelSection(d.recordMax);
@@ -488,10 +511,7 @@
      * INIT
      *******************************************************/
     document.addEventListener("DOMContentLoaded", function(){
-      // Carica dati e aggiorna UI
       updateUI(data);
-
-      // Countdown
       updateCountdownLine();
       setInterval(updateCountdownLine, 60000);
 
@@ -512,20 +532,16 @@
             data.streakCurrent=1;
           }
         }
-        // Aggiorna record
         if (data.streakCurrent > data.recordMax) {
           data.recordMax = data.streakCurrent;
         }
-        // Aumenta contatore totale
         data.totalCompleted +=1;
-        // Segna la settimana
         data.lastWeekClicked = nowWeekId;
         data.calendarHistory[nowWeekId] = "done";
-        // Salva e aggiorna
         saveData(data);
         updateUI(data);
 
-        // Apri link in nuova scheda
+        // Apri link Office Forms
         window.open("https://forms.office.com/e/W7U5HWqwGD","_blank");
       });
 
