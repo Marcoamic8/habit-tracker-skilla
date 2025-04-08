@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Tracker Finale - Spaziatura & Testo Reset</title>
+  <title>Tracker con Separatore & Testo Compatto</title>
   <style>
     body {
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -17,29 +17,10 @@
       position: relative;
     }
 
-    .smallText {
-      font-size: 12px;
-      text-align: center;
-      margin: 4px 0;
-    }
-    .tinyText {
-      font-size: 10px;
-    }
-
-    /* Messaggio streak persa */
-    #lostStreakMsg {
-      color: red;
-      font-weight: bold;
-      text-align: center;
-      font-size: 12px;
-      margin-bottom: 6px;
-      display: none;
-    }
-
-    /* Sezione in alto: Timer + Contribuisci */
+    /* Pulsante e Timer in alto */
     #topSection {
       text-align: center;
-      margin-bottom: 16px; /* Maggiore distanza prima del resto */
+      margin-bottom: 16px;
     }
     #countdownLine {
       font-size: 12px;
@@ -57,19 +38,27 @@
       cursor: not-allowed;
     }
 
-    /* Info Streak */
+    /* Streak Persa & Info */
+    #lostStreakMsg {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+      font-size: 12px;
+      margin-bottom: 6px;
+      display: none;
+    }
     #streakInfoLine {
       font-size: 12px;
       text-align: center;
-      margin: 12px 0; /* Maggiore distanza dal pulsante e dalla timeline */
+      margin: 12px 0;
     }
 
-    /* Timeline settimanale */
+    /* Timeline */
     #timelineContainer {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      margin-bottom: 8px; /* Più spazio dal livello */
+      margin-bottom: 12px;
     }
     .weekBox {
       width: 60px;
@@ -85,7 +74,7 @@
       position: relative;
     }
     .weekBox.current {
-      border: 2px solid #4caf50; /* Evidenzia la settimana attuale */
+      border: 2px solid #4caf50;
     }
     .statusSymbol {
       font-size: 16px;
@@ -93,13 +82,20 @@
       margin-bottom: 2px;
     }
 
-    /* Barra di progresso con testo interno */
+    /* Separatore */
+    .separator {
+      border: none;
+      border-top: 1px solid #ddd;
+      margin: 8px 0 12px 0;
+    }
+
+    /* Progresso con testo integrato */
     #progressBarContainer {
       position: relative;
       background-color: #eee;
       border-radius: 8px;
-      height: 24px; /* Alzato per ospitare il testo */
-      margin: 6px auto 8px auto;
+      height: 24px;
+      margin: 0 auto 10px auto;
       width: 100%;
       overflow: hidden;
       text-align: center;
@@ -110,7 +106,6 @@
       width: 0%;
       transition: width 0.5s ease;
     }
-    /* Testo dentro la barra */
     #progressBarText {
       position: absolute;
       top: 0;
@@ -123,26 +118,24 @@
       pointer-events: none;
     }
 
-    /* Livello e motivazione */
+    /* Livello Compatto */
     #levelSection {
-      margin-top: 12px; /* più spazio dalla timeline */
+      margin-top: 8px;
       text-align: center;
-      font-size: 12px;
+      font-size: 11px;
+      color: #666;
     }
     #levelEmojiLine {
       margin-bottom: 2px;
-    }
-    #levelMotivation {
-      font-size: 10px;
+      font-size: 12px;
       color: #444;
-      margin-bottom: 2px;
     }
     #levelNextGoal {
       font-size: 10px;
-      color: #666;
+      color: #888;
     }
 
-    /* Reset progressi in basso a destra */
+    /* Reset progressi in basso a dx */
     #resetArea {
       position: absolute;
       bottom: 4px;
@@ -172,37 +165,37 @@
 <body>
   <div id="mainContainer">
 
-    <!-- Messaggio "Streak persa" -->
-    <div id="lostStreakMsg">Streak persa. Riparti da 0!</div>
-
-    <!-- Sezione in alto: Timer + Contribuisci -->
+    <!-- Timer & Pulsante in alto -->
     <div id="topSection">
       <div id="countdownLine">⏳Hai ancora -- per dare il tuo contributo della settimana</div>
       <button id="contributeBtn">Contribuisci ora</button>
     </div>
 
-    <!-- Info Streak e Record -->
+    <!-- Messaggio Streak persa & Info Streak -->
+    <div id="lostStreakMsg">Streak persa. Riparti da 0!</div>
     <div id="streakInfoLine">Streak attuale: 0 | Record: 0</div>
 
     <!-- Timeline -->
     <div id="timelineContainer"></div>
 
-    <!-- Barra di progresso con testo interno -->
+    <!-- Separatore -->
+    <hr class="separator">
+
+    <!-- Barra di progresso con testo -->
     <div id="progressBarContainer">
       <div id="progressBarFill"></div>
       <div id="progressBarText">
-        🎯 Obiettivo: dare almeno 20 contributi (<span id="progressCount">0</span> su 20)
+        🎯 Obiettivo: 20 contributi (<span id="progressCount">0</span> / 20)
       </div>
     </div>
 
-    <!-- Sezione Livello -->
+    <!-- Livello: compressione testo -->
     <div id="levelSection">
-      <div id="levelEmojiLine">Livello: ➖ ➖ ➖ ➖  "Non pervenuto"</div>
-      <div id="levelMotivation"></div>
+      <div id="levelEmojiLine">Livello: ➖ ➖ ➖ ➖ "Non pervenuto"</div>
       <div id="levelNextGoal"></div>
     </div>
 
-    <!-- Area Reset in basso a destra -->
+    <!-- Reset in basso a dx -->
     <div id="resetArea">
       <button id="resetBtn">Reset progressi</button>
       <div id="resetConfirm">
@@ -214,53 +207,40 @@
 
   <script>
     /*******************************************************
-     * CONFIG & COSTANTI
+     * CONFIG
      *******************************************************/
-    const GOAL_WEEKS = 20; // 20 contributi
+    const GOAL_WEEKS = 20;
     const LEVELS = [
       {
         threshold: 2,
         emoji: "🌱",
         name: "In cammino",
-        motivation: "Hai iniziato un percorso di crescita.",
-        nextGoal: "Per salire di livello, raggiungi una streak di 4 settimane consecutive."
+        nextGoal: "Prossimo livello: 4 settimane consecutive"
       },
       {
         threshold: 4,
         emoji: "🐢",
         name: "Costante",
-        motivation: "Hai dimostrato regolarità.",
-        nextGoal: "Per salire di livello, raggiungi una streak di 8 settimane consecutive."
+        nextGoal: "Prossimo livello: 8 settimane consecutive"
       },
       {
         threshold: 8,
         emoji: "🐉",
         name: "Tenace",
-        motivation: "Non molli mai.",
-        nextGoal: "Vuoi ancora salire di livello? Raggiungi una streak di ??? settimane consecutive… (numero top secret🤐)"
+        nextGoal: "Vuoi ancora salire? ??? settimane (top secret 🤐)"
       },
       {
         threshold: 16,
         emoji: "👑",
         name: "Custode del fuoco",
-        motivation: "Hai raggiunto il livello massimo!",
-        nextGoal: "Hai raggiunto il livello massimo, continua così oppure resetta i tuoi progressi per una nuova sfida."
+        nextGoal: "Livello massimo raggiunto, puoi resettare se vuoi."
       }
     ];
 
-    /*******************************************************
-     * SALVATAGGIO DATI
-     *******************************************************/
     function loadData() {
       const saved = localStorage.getItem("habitTrackerDataMega");
       if (saved) return JSON.parse(saved);
-      return {
-        lastWeekClicked: "",
-        streakCurrent: 0,
-        recordMax: 0,
-        totalCompleted: 0,
-        calendarHistory: {}
-      };
+      return { lastWeekClicked:"", streakCurrent:0, recordMax:0, totalCompleted:0, calendarHistory:{} };
     }
     function saveData(d) {
       localStorage.setItem("habitTrackerDataMega", JSON.stringify(d));
@@ -268,7 +248,7 @@
     let data = loadData();
 
     /*******************************************************
-     * UTILS PER DATE & TIMELINE
+     * FUNZIONI UTILI
      *******************************************************/
     function getIsoWeekInfo(date) {
       const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -284,10 +264,8 @@
     }
     function weekIdToNumeric(weekId) {
       const parts = weekId.split("-W");
-      if (parts.length < 2) return 0;
-      const yearNum = parseInt(parts[0], 10);
-      const weekNum = parseInt(parts[1], 10);
-      return yearNum * 52 + weekNum;
+      if (parts.length<2) return 0;
+      return parseInt(parts[0],10)*52 + parseInt(parts[1],10);
     }
     function weekDifference(id1, id2) {
       return weekIdToNumeric(id2) - weekIdToNumeric(id1);
@@ -295,274 +273,209 @@
 
     function getMonday(date) {
       const day = date.getDay();
-      const diff = (day === 0 ? 6 : day - 1);
+      const diff = (day===0?6:day-1);
       const monday = new Date(date);
-      monday.setDate(monday.getDate() - diff);
+      monday.setDate(monday.getDate()-diff);
       monday.setHours(0,0,0,0);
       return monday;
     }
     function formatWeekRange(mondayDate) {
-      const sundayDate = new Date(mondayDate);
-      sundayDate.setDate(sundayDate.getDate() + 6);
-      const shortMonth = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
-      const d1 = mondayDate.getDate();
-      const m1 = shortMonth[mondayDate.getMonth()];
-      const d2 = sundayDate.getDate();
-      const m2 = shortMonth[sundayDate.getMonth()];
-      if (m1 === m2) {
-        return `${d1}–${d2} ${m1}`;
-      } else {
-        return `${d1} ${m1} – ${d2} ${m2}`;
-      }
+      const sunday = new Date(mondayDate);
+      sunday.setDate(sunday.getDate()+6);
+      const months = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+      const d1=mondayDate.getDate(), m1=months[mondayDate.getMonth()];
+      const d2=sunday.getDate(), m2=months[sunday.getMonth()];
+      return (m1===m2)? `${d1}–${d2} ${m1}` : `${d1} ${m1} – ${d2} ${m2}`;
     }
     function buildTimeline() {
       const today = new Date();
-      const currentMonday = getMonday(today);
-      let arr = [];
-      for (let i = -5; i <= 2; i++) {
-        let thisMonday = new Date(currentMonday);
-        thisMonday.setDate(currentMonday.getDate() + i*7);
+      const baseMon = getMonday(today);
+      let arr=[];
+      for(let i=-5; i<=2; i++){
+        let thisMon=new Date(baseMon);
+        thisMon.setDate(baseMon.getDate()+i*7);
         arr.push({
-          offset: i,
-          startDate: thisMonday,
-          label: formatWeekRange(thisMonday),
-          isoWeekId: getWeekId(thisMonday)
+          offset:i,
+          isoWeekId:getWeekId(thisMon),
+          label:formatWeekRange(thisMon)
         });
       }
       return arr;
     }
 
-    /*******************************************************
-     * COUNTDOWN
-     *******************************************************/
-    function getNextMonday() {
-      const now = new Date();
-      let day = now.getDay();
-      let daysToMonday = 1 - day;
-      if (daysToMonday <= 0) daysToMonday += 7;
-      const nextMon = new Date(now);
-      nextMon.setDate(now.getDate() + daysToMonday);
-      nextMon.setHours(0,0,0,0);
-      return nextMon;
+    function getNextMonday(){
+      const now=new Date();
+      let day=now.getDay();
+      let diff=1-day;
+      if(diff<=0) diff+=7;
+      let nxt=new Date(now);
+      nxt.setDate(now.getDate()+diff);
+      nxt.setHours(0,0,0,0);
+      return nxt;
     }
-    function updateCountdownLine() {
-      const cLine = document.getElementById("countdownLine");
-      const now = new Date();
-      const nMon = getNextMonday();
-      const diffMs = nMon - now;
-      if (diffMs <= 0) {
-        cLine.textContent = "⏳Hai ancora 0g 0h 0m per dare il tuo contributo della settimana";
+    function updateCountdownLine(){
+      const cLine=document.getElementById("countdownLine");
+      let diffMs=getNextMonday()-new Date();
+      if(diffMs<=0){
+        cLine.textContent="⏳Hai ancora 0g 0h 0m per dare il tuo contributo della settimana";
         return;
       }
-      const diffMin = Math.floor(diffMs / 60000);
-      const days = Math.floor(diffMin / (60*24));
-      const hours = Math.floor((diffMin % (60*24))/60);
-      const mins = diffMin % 60;
-      cLine.textContent = `⏳Hai ancora ${days}g ${hours}h ${mins}m per dare il tuo contributo della settimana`;
+      let diffMin=Math.floor(diffMs/60000);
+      let days=Math.floor(diffMin/(60*24));
+      let hours=Math.floor((diffMin%(60*24))/60);
+      let mins=(diffMin%(60*24))%60;
+      cLine.textContent=`⏳Hai ancora ${days}g ${hours}h ${mins}m per dare il tuo contributo della settimana`;
     }
 
-    /*******************************************************
-     * LIVELLI
-     *******************************************************/
-    function getUnlockedCount(recordMax) {
-      let count = 0;
-      for (let lvl of LEVELS) {
-        if (recordMax >= lvl.threshold) count++;
+    function getUnlockedCount(recordMax){
+      let c=0;
+      for(let lvl of LEVELS){
+        if(recordMax>=lvl.threshold) c++;
       }
-      return count;
+      return c;
     }
-    function getCurrentLevel(recordMax) {
-      let current = null;
-      for (let lvl of LEVELS) {
-        if (recordMax >= lvl.threshold) {
-          current = lvl;
-        }
+    function getCurrentLevel(recordMax){
+      let cur=null;
+      for(let lvl of LEVELS){
+        if(recordMax>=lvl.threshold) cur=lvl;
       }
-      return current;
+      return cur;
     }
-    function updateLevelSection(recordMax) {
-      const levelEmojiLine = document.getElementById("levelEmojiLine");
-      const levelMotivation = document.getElementById("levelMotivation");
-      const levelNextGoal = document.getElementById("levelNextGoal");
 
-      const unlocked = getUnlockedCount(recordMax);
-      let emojiSeq = "";
-      for (let i = 0; i < LEVELS.length; i++) {
-        if (i < unlocked) {
-          emojiSeq += LEVELS[i].emoji + " ";
-        } else {
-          emojiSeq += "➖ ";
-        }
+    function updateLevelSection(recordMax){
+      const lvlLine=document.getElementById("levelEmojiLine");
+      const nxtGoal=document.getElementById("levelNextGoal");
+      let unlocked=getUnlockedCount(recordMax);
+      let seq="";
+      for(let i=0; i<LEVELS.length;i++){
+        if(i<unlocked) seq+= LEVELS[i].emoji+" ";
+        else seq+="➖ ";
       }
 
-      // Livello 0 => Non pervenuto
-      if (unlocked === 0) {
-        levelEmojiLine.textContent = `Livello: ${emojiSeq}"Non pervenuto"`;
-        levelMotivation.textContent = "";
-        levelNextGoal.textContent = "Per sbloccare il primo livello, raggiungi una streak di 2 settimane consecutive.";
+      if(unlocked===0){
+        lvlLine.textContent=`Livello: ${seq}"Non pervenuto"`;
+        nxtGoal.textContent="Per sbloccare il primo livello: 2 settimane consecutive";
         return;
       }
-
-      // Livello sbloccato
-      const currentLvl = getCurrentLevel(recordMax);
-      if (!currentLvl) {
-        levelEmojiLine.textContent = `Livello: ${emojiSeq}"Non pervenuto"`;
-        levelMotivation.textContent = "";
-        levelNextGoal.textContent = "Per sbloccare il primo livello, raggiungi una streak di 2 settimane consecutive.";
+      let curLvl=getCurrentLevel(recordMax);
+      if(!curLvl){
+        lvlLine.textContent=`Livello: ${seq}"Non pervenuto"`;
+        nxtGoal.textContent="Per sbloccare il primo livello: 2 settimane consecutive";
         return;
       }
-
-      levelEmojiLine.textContent = `Livello: ${emojiSeq}"${currentLvl.name}" – ${currentLvl.motivation}`;
-      levelMotivation.textContent = "";
-      levelNextGoal.textContent = currentLvl.nextGoal;
+      lvlLine.textContent=`Livello: ${seq}"${curLvl.name}"`;
+      nxtGoal.textContent=curLvl.nextGoal;
     }
 
-    /*******************************************************
-     * UPDATE UI
-     *******************************************************/
-    function updateUI(d) {
-      // Se saltate 2+ settimane => streak=0
-      const nowWeekId = getWeekId(new Date());
-      if (d.lastWeekClicked) {
-        const diff = weekDifference(d.lastWeekClicked, nowWeekId);
-        if (diff >= 2) {
-          d.streakCurrent = 0;
-        }
+    function updateUI(d){
+      // Streak zero se saltate 2+ settimane
+      let nowWId=getWeekId(new Date());
+      if(d.lastWeekClicked){
+        let dif=weekDifference(d.lastWeekClicked, nowWId);
+        if(dif>=2) d.streakCurrent=0;
       }
-
-      // Messaggio streak persa
-      const lostMsg = document.getElementById("lostStreakMsg");
-      lostMsg.style.display = (d.streakCurrent > 0) ? "none" : "block";
-
-      // Countdown & Bottone
-      const cLine = document.getElementById("countdownLine");
-      const cBtn = document.getElementById("contributeBtn");
-      if (d.lastWeekClicked === nowWeekId) {
-        cBtn.disabled = true;
-        cBtn.textContent = "Già segnata ✔";
-        // Nascondi countdown
-        cLine.style.display = "none";
+      // Countdown e pulsante
+      const cBtn=document.getElementById("contributeBtn");
+      const cLine=document.getElementById("countdownLine");
+      if(d.lastWeekClicked===nowWId){
+        cBtn.disabled=true;
+        cBtn.textContent="Già segnata ✔";
+        cLine.style.display="none";
       } else {
-        cBtn.disabled = false;
-        cBtn.textContent = "Contribuisci ora";
-        cLine.style.display = "block";
+        cBtn.disabled=false;
+        cBtn.textContent="Contribuisci ora";
+        cLine.style.display="block";
       }
+
+      // Streak persa
+      const lostMsg=document.getElementById("lostStreakMsg");
+      if(d.streakCurrent>0) lostMsg.style.display="none";
+      else lostMsg.style.display="block";
 
       // Streak info
-      const streakLine = document.getElementById("streakInfoLine");
-      streakLine.textContent = `Streak attuale: ${d.streakCurrent} | Record: ${d.recordMax}`;
+      document.getElementById("streakInfoLine").textContent=`Streak attuale: ${d.streakCurrent} | Record: ${d.recordMax}`;
 
       // Timeline
-      const timelineContainer = document.getElementById("timelineContainer");
-      timelineContainer.innerHTML = "";
-      const nowNumeric = weekIdToNumeric(nowWeekId);
-      const timeline = buildTimeline();
-      for (let t of timeline) {
-        const box = document.createElement("div");
-        box.className = "weekBox";
-        if (t.offset === 0) box.classList.add("current");
-
-        let statusEl = document.createElement("div");
-        statusEl.className = "statusSymbol";
-
-        let numericWid = weekIdToNumeric(t.isoWeekId);
-        if (numericWid > nowNumeric) {
-          statusEl.textContent = "⬜";
+      const cont=document.getElementById("timelineContainer");
+      cont.innerHTML="";
+      let arr=buildTimeline();
+      let nowNum=weekIdToNumeric(nowWId);
+      for(let item of arr){
+        let box=document.createElement("div");
+        box.className="weekBox";
+        if(item.offset===0) box.classList.add("current");
+        let sym=document.createElement("div");
+        sym.className="statusSymbol";
+        let wn=weekIdToNumeric(item.isoWeekId);
+        if(wn>nowNum){
+          sym.textContent="⬜";
         } else {
-          const state = d.calendarHistory[t.isoWeekId];
-          if (state === "done") {
-            statusEl.textContent = "🔥";
-          } else if (state === "missed") {
-            statusEl.textContent = "💨";
+          let st=d.calendarHistory[item.isoWeekId];
+          if(st==="done"){
+            sym.textContent="🔥";
+          } else if(st==="missed"){
+            sym.textContent="💨";
           } else {
-            if (numericWid === nowNumeric) {
-              if (d.lastWeekClicked === nowWeekId) {
-                statusEl.textContent = "🔥";
-              } else {
-                statusEl.textContent = "⬜";
-              }
-            } else {
-              statusEl.textContent = "💨";
-            }
+            if(wn===nowNum){
+              sym.textContent=(d.lastWeekClicked===nowWId)?"🔥":"⬜";
+            } else sym.textContent="💨";
           }
         }
-        box.appendChild(statusEl);
+        box.appendChild(sym);
 
-        let label = document.createElement("div");
-        label.textContent = t.label;
-        box.appendChild(label);
-
-        timelineContainer.appendChild(box);
+        let lab=document.createElement("div");
+        lab.textContent=item.label;
+        box.appendChild(lab);
+        cont.appendChild(box);
       }
 
       // Progresso
-      const progressCount = document.getElementById("progressCount");
-      progressCount.textContent = d.totalCompleted;
-      const pbFill = document.getElementById("progressBarFill");
-      let perc = (d.totalCompleted / GOAL_WEEKS)*100;
-      if (perc>100) perc=100;
-      pbFill.style.width = perc + "%";
+      document.getElementById("progressCount").textContent=d.totalCompleted;
+      let pbFill=document.getElementById("progressBarFill");
+      let perc=(d.totalCompleted/GOAL_WEEKS)*100;
+      if(perc>100) perc=100;
+      pbFill.style.width=perc+"%";
 
-      // Sezione livelli
+      // Livello
       updateLevelSection(d.recordMax);
     }
 
-    /*******************************************************
-     * INIT
-     *******************************************************/
-    document.addEventListener("DOMContentLoaded", function(){
+    document.addEventListener("DOMContentLoaded", ()=>{
       updateUI(data);
       updateCountdownLine();
-      setInterval(updateCountdownLine, 60000);
+      setInterval(updateCountdownLine,60000);
 
-      // Contribuisci
-      const cBtn = document.getElementById("contributeBtn");
-      cBtn.addEventListener("click", function(){
-        const nowWeekId = getWeekId(new Date());
-        if (data.lastWeekClicked === nowWeekId) return;
-
-        // Gestione streak
-        if (!data.lastWeekClicked) {
-          data.streakCurrent = 1;
+      const cBtn=document.getElementById("contributeBtn");
+      cBtn.addEventListener("click", ()=>{
+        let nowWId=getWeekId(new Date());
+        if(data.lastWeekClicked===nowWId) return;
+        if(!data.lastWeekClicked){
+          data.streakCurrent=1;
         } else {
-          const diff = weekDifference(data.lastWeekClicked, nowWeekId);
-          if (diff === 1) {
-            data.streakCurrent +=1;
-          } else {
-            data.streakCurrent=1;
-          }
+          let dif=weekDifference(data.lastWeekClicked, nowWId);
+          data.streakCurrent=(dif===1)? data.streakCurrent+1 : 1;
         }
-        if (data.streakCurrent > data.recordMax) {
-          data.recordMax = data.streakCurrent;
-        }
-        data.totalCompleted +=1;
-        data.lastWeekClicked = nowWeekId;
-        data.calendarHistory[nowWeekId] = "done";
+        if(data.streakCurrent>data.recordMax) data.recordMax=data.streakCurrent;
+        data.totalCompleted++;
+        data.lastWeekClicked=nowWId;
+        data.calendarHistory[nowWId]="done";
         saveData(data);
         updateUI(data);
 
-        // Apri link Office Forms
         window.open("https://forms.office.com/e/W7U5HWqwGD","_blank");
       });
 
-      // Reset
-      const resetBtn = document.getElementById("resetBtn");
-      const resetConfirm = document.getElementById("resetConfirm");
-      let resetStage = 0;
-      resetBtn.addEventListener("click", function(){
-        if (resetStage===0) {
+      let resetBtn=document.getElementById("resetBtn");
+      let resetConf=document.getElementById("resetConfirm");
+      let resetStage=0;
+      resetBtn.addEventListener("click", ()=>{
+        if(resetStage===0){
           resetStage=1;
-          resetConfirm.style.display="block";
+          resetConf.style.display="block";
         } else {
           resetStage=0;
-          resetConfirm.style.display="none";
-          data = {
-            lastWeekClicked: "",
-            streakCurrent: 0,
-            recordMax: 0,
-            totalCompleted: 0,
-            calendarHistory:{}
-          };
+          resetConf.style.display="none";
+          data={ lastWeekClicked:"", streakCurrent:0, recordMax:0, totalCompleted:0, calendarHistory:{} };
           saveData(data);
           updateUI(data);
         }
